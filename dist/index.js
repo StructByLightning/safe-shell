@@ -29937,7 +29937,8 @@ var ALLOWED_COMMANDS = [
   "npm run build",
   "npm run test",
   "npm run lint",
-  "npm run start"
+  "npm run start",
+  "npm install && npm run build"
 ];
 async function runCommand(command, waitForCompletion = true) {
   if (!waitForCompletion) {

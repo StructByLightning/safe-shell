@@ -14,6 +14,7 @@ const ALLOWED_COMMANDS = [
 	"npm run test",
 	"npm run lint",
 	"npm run start",
+  "npm install && npm run build"
 ];
 
 /**
