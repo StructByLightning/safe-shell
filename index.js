@@ -44,14 +44,18 @@ async function runCommand(command, waitForCompletion = true) {
 const SHELL_DESCRIPTION = "Run a terminal command in the current directory. The shell is not stateful and will not remember any previous commands. When a command is run in the background ALWAYS suggest using shell commands to stop it; NEVER suggest using Ctrl+C. When suggesting subsequent shell commands ALWAYS format them in shell command blocks. Do NOT perform actions requiring special/admin privileges. IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed, awk, etc). Choose terminal commands and scripts optimized for linux and x64 and shell /bin/bash.";
 
 const SCHEMA = {
-	command: {
-		description: "The command to run. This will be passed directly into the IDE shell.",
-		type: "string",
+	properties: {
+		command: {
+			description: "The command to run. This will be passed directly into the IDE shell.",
+			type: "string",
+		},
+		waitForCompletion: {
+			description: "Whether to wait for the command to complete before returning. Default is true. Set to false to run the command in the background. Set to true to run the command in the foreground and wait to collect the output.",
+			type: "boolean",
+		},
 	},
-	waitForCompletion: {
-		description: "Whether to wait for the command to complete before returning. Default is true. Set to false to run the command in the background. Set to true to run the command in the foreground and wait to collect the output.",
-		type: "boolean",
-	},
+	required: ["command"],
+	type: "object",
 };
 
 const server = new McpServer({
