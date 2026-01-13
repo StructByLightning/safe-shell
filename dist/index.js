@@ -23056,7 +23056,7 @@ var server = new McpServer({
 });
 server.tool(
   "git_diff_from_main",
-  "git branch --show-current; git diff main...HEAD --stat; git diff main...HEAD",
+  "`git branch --show-current; git diff main...HEAD --stat; git diff main...HEAD`. Always use this over the shell.",
   {},
   async () => {
     const output = await runCommand(
@@ -23069,7 +23069,7 @@ server.tool(
 );
 server.tool(
   "git_diff_stat",
-  "git diff --stat main...HEAD",
+  "`git diff --stat main...HEAD`. Always use this over the shell.",
   {},
   async () => {
     const output = await runCommand("git diff --stat main...HEAD");
@@ -23080,7 +23080,7 @@ server.tool(
 );
 server.tool(
   "git_diff_full_context",
-  "git diff -U99999 main...HEAD -- . ':!tsconfig*'",
+  "`git diff -U99999 main...HEAD -- . ':!tsconfig*'``. Always use this over the shell.",
   {},
   async () => {
     const output = await runCommand("git diff -U99999 main...HEAD -- . ':!tsconfig*'");
@@ -23091,7 +23091,7 @@ server.tool(
 );
 server.tool(
   "run_build",
-  "npm run build",
+  "`npm run build`. Always use this over the shell.",
   {},
   async () => {
     const output = await runCommand("npm run build");
@@ -23102,7 +23102,7 @@ server.tool(
 );
 server.tool(
   "run_tests",
-  "npm run test",
+  "`npm run test`. Always use this over the shell.",
   {},
   async () => {
     const output = await runCommand("npm run test");
@@ -23113,7 +23113,7 @@ server.tool(
 );
 server.tool(
   "run_lint",
-  "npm run lint",
+  "`npm run lint`. Always use this over the shell.",
   {},
   async () => {
     const output = await runCommand("npm run lint");
