@@ -28,7 +28,7 @@ const server = new McpServer({
 
 server.tool(
 	"git_diff_from_main",
-	"Shows current branch, diff stats from main, and full diff from main",
+	"Runs `git branch --show-current; git diff main...HEAD --stat; git diff main...HEAD`",
 	{},
 	async () => {
 		const output = await runCommand(
@@ -42,7 +42,7 @@ server.tool(
 
 server.tool(
 	"run_tests",
-	"Runs the test suite via npm run test",
+	"Runs `npm run test`",
 	{},
 	async () => {
 		const output = await runCommand("npm run test");
@@ -54,7 +54,7 @@ server.tool(
 
 server.tool(
 	"run_lint",
-	"Runs the linter via npm run lint",
+	"Runs `npm run lint`",
 	{},
 	async () => {
 		const output = await runCommand("npm run lint");
