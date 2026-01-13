@@ -69,7 +69,7 @@ const server = new McpServer({
 server.tool(
 	"shell",
 	`${SHELL_DESCRIPTION} Always use this first. Only runs whitelisted commands - if the command is not allowed, returns an error with the list of allowed commands and instructions to use shell_slow instead.`,
-	SCHEMA,
+	{inputSchema: SCHEMA},
 	async ({command, waitForCompletion = true}) => {
 		if (!ALLOWED_COMMANDS.includes(command)) {
 			const allowedList = ALLOWED_COMMANDS.map((c) => `  - ${c}`).join("\n");
@@ -92,7 +92,7 @@ server.tool(
 server.tool(
 	"shell_slow",
 	`${SHELL_DESCRIPTION} Runs any command but requires user approval. Never use this before trying shell first.`,
-	SCHEMA,
+	{inputSchema: SCHEMA},
 	async ({command, waitForCompletion = true}) => {
 		const output = await runCommand(command, waitForCompletion);
 		return {
