@@ -69,7 +69,7 @@ server.tool(
 			const allowedList = ALLOWED_COMMANDS.map((c) => `  - ${c}`).join("\n");
 			return {
 				content: [{
-					text: `Command not in whitelist.\n\nAllowed commands:\n${allowedList}\n\nUse shell_slow for other commands (requires user approval).`,
+					text: `Command not in whitelist: ${command}\n\nAllowed commands:\n${allowedList}\n\nUse shell_slow for other commands (requires user approval).`,
 					type: "text",
 				}],
 				isError: true,

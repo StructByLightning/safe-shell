@@ -23092,7 +23092,7 @@ server.tool(
       const allowedList = ALLOWED_COMMANDS.map((c) => `  - ${c}`).join("\n");
       return {
         content: [{
-          text: `Command not in whitelist.
+          text: `Command not in whitelist: ${command}
 
 Allowed commands:
 ${allowedList}
