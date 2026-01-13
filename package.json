@@ -12,7 +12,11 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.2"
+    "@modelcontextprotocol/sdk": "^1.25.2",
+    "build": "^0.1.4",
+    "npm": "^11.7.0",
+    "run": "^1.5.0",
+    "zod": "^4.3.5"
   },
   "type": "module",
   "bin": "dist/index.js",

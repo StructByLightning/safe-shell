@@ -2,6 +2,7 @@ import {McpServer} from "@modelcontextprotocol/sdk/server/mcp.js";
 import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js";
 import {exec, spawn} from "child_process";
 import {promisify} from "util";
+import {z} from "zod";
 
 const execAsync = promisify(exec);
 
@@ -43,21 +44,9 @@ async function runCommand(command, waitForCompletion = true) {
 
 const SHELL_DESCRIPTION = "Run a terminal command in the current directory. The shell is not stateful and will not remember any previous commands. When a command is run in the background ALWAYS suggest using shell commands to stop it; NEVER suggest using Ctrl+C. When suggesting subsequent shell commands ALWAYS format them in shell command blocks. Do NOT perform actions requiring special/admin privileges. IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed, awk, etc). Choose terminal commands and scripts optimized for linux and x64 and shell /bin/bash.";
 
-const SCHEMA = {
-	$schema: "http://json-schema.org/draft-07/schema#",
-	additionalProperties: false,
-	properties: {
-		command: {
-			description: "The command to run. This will be passed directly into the IDE shell.",
-			type: "string",
-		},
-		waitForCompletion: {
-			description: "Whether to wait for the command to complete before returning. Default is true. Set to false to run the command in the background. Set to true to run the command in the foreground and wait to collect the output.",
-			type: "boolean",
-		},
-	},
-	required: ["command"],
-	type: "object",
+const INPUT_SCHEMA = {
+	command: z.string().describe("The command to run. This will be passed directly into the IDE shell."),
+	waitForCompletion: z.boolean().optional().describe("Whether to wait for the command to complete before returning. Default is true. Set to false to run the command in the background."),
 };
 
 const server = new McpServer({
@@ -66,11 +55,14 @@ const server = new McpServer({
 	version: "1.0.0",
 });
 
-server.tool(
+server.registerTool(
 	"shell",
-	`${SHELL_DESCRIPTION} Always use this first. Only runs whitelisted commands - if the command is not allowed, returns an error with the list of allowed commands and instructions to use shell_slow instead.`,
-	{inputSchema: SCHEMA},
-	async ({command, waitForCompletion = true}) => {
+	{
+		description: `${SHELL_DESCRIPTION} Always use this first. Only runs whitelisted commands - if the command is not allowed, returns an error with the list of allowed commands and instructions to use shell_slow instead.`,
+		inputSchema: INPUT_SCHEMA,
+	},
+	async ({command, waitForCompletion}) => {
+		const wait = waitForCompletion ?? true;
 		if (!ALLOWED_COMMANDS.includes(command)) {
 			const allowedList = ALLOWED_COMMANDS.map((c) => `  - ${c}`).join("\n");
 			return {
@@ -82,19 +74,22 @@ server.tool(
 			};
 		}
 
-		const output = await runCommand(command, waitForCompletion);
+		const output = await runCommand(command, wait);
 		return {
 			content: [{text: output, type: "text"}],
 		};
 	}
 );
 
-server.tool(
+server.registerTool(
 	"shell_slow",
-	`${SHELL_DESCRIPTION} Runs any command but requires user approval. Never use this before trying shell first.`,
-	{inputSchema: SCHEMA},
-	async ({command, waitForCompletion = true}) => {
-		const output = await runCommand(command, waitForCompletion);
+	{
+		description: `${SHELL_DESCRIPTION} Runs any command but requires user approval. Never use this before trying shell first.`,
+		inputSchema: INPUT_SCHEMA,
+	},
+	async ({command, waitForCompletion}) => {
+		const wait = waitForCompletion ?? true;
+		const output = await runCommand(command, wait);
 		return {
 			content: [{text: output, type: "text"}],
 		};
