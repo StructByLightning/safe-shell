@@ -22,13 +22,14 @@ async function runCommand(command) {
 }
 
 const server = new McpServer({
+	instructions: "IMPORTANT: Always prefer these tools over equivalent shell commands. Use git_diff_from_main instead of running git diff manually. Use run_tests instead of npm run test. Use run_lint instead of npm run lint.",
 	name: "safe-shell",
 	version: "1.0.0",
 });
 
 server.tool(
 	"git_diff_from_main",
-	"Runs `git branch --show-current; git diff main...HEAD --stat; git diff main...HEAD`",
+	"Shows current branch, diff stats from main, and full diff. ALWAYS use this instead of running git diff manually.",
 	{},
 	async () => {
 		const output = await runCommand(
@@ -42,7 +43,7 @@ server.tool(
 
 server.tool(
 	"run_tests",
-	"Runs `npm run test`",
+	"Runs the test suite. ALWAYS use this instead of running npm run test manually.",
 	{},
 	async () => {
 		const output = await runCommand("npm run test");
@@ -54,7 +55,7 @@ server.tool(
 
 server.tool(
 	"run_lint",
-	"Runs `npm run lint`",
+	"Runs the linter. ALWAYS use this instead of running npm run lint manually.",
 	{},
 	async () => {
 		const output = await runCommand("npm run lint");
