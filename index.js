@@ -51,15 +51,16 @@ const INPUT_SCHEMA = {
 };
 
 const server = new McpServer({
-	instructions: "IMPORTANT: Always use the shell tool first. Only use shell_slow if shell returns an error saying the command is not whitelisted.",
 	name: "safe-shell",
 	version: "1.0.0",
 });
 
+const allowedCommandsList = ALLOWED_COMMANDS.map((c) => `  - ${c}`).join("\n");
+
 server.registerTool(
-	"shell",
+	"run_terminal_command_approved",
 	{
-		description: `${SHELL_DESCRIPTION} Always use this first. Only runs whitelisted commands - if the command is not allowed, returns an error with the list of allowed commands and instructions to use shell_slow instead.`,
+		description: `${SHELL_DESCRIPTION} Only runs whitelisted commands - if the command is not allowed, returns an error. Allowed commands:\n${allowedCommandsList}`,
 		inputSchema: INPUT_SCHEMA,
 	},
 	async ({command, waitForCompletion}) => {
@@ -68,28 +69,13 @@ server.registerTool(
 			const allowedList = ALLOWED_COMMANDS.map((c) => `  - ${c}`).join("\n");
 			return {
 				content: [{
-					text: `Command not in whitelist: ${command}\n\nAllowed commands:\n${allowedList}\n\nUse shell_slow for other commands (requires user approval).`,
+					text: `Command not in whitelist: ${command}\n\nAllowed commands:\n${allowedList}`,
 					type: "text",
 				}],
 				isError: true,
 			};
 		}
 
-		const output = await runCommand(command, wait);
-		return {
-			content: [{text: output, type: "text"}],
-		};
-	}
-);
-
-server.registerTool(
-	"shell_slow",
-	{
-		description: `${SHELL_DESCRIPTION} Runs any command but requires user approval. Never use this before trying shell first.`,
-		inputSchema: INPUT_SCHEMA,
-	},
-	async ({command, waitForCompletion}) => {
-		const wait = waitForCompletion ?? true;
 		const output = await runCommand(command, wait);
 		return {
 			content: [{text: output, type: "text"}],
