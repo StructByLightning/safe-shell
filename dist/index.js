@@ -23091,17 +23091,18 @@ server.tool(
   "shell",
   `${SHELL_DESCRIPTION} Always use this first. Only runs whitelisted commands - if the command is not allowed, returns an error with the list of allowed commands and instructions to use shell_slow instead.`,
   SCHEMA,
-  async (params) => {
-    const debugInfo = JSON.stringify(params, null, 2);
-    const command = params.command;
-    const waitForCompletion = params.waitForCompletion ?? true;
+  async (args, extra) => {
+    const debugInfo = `args: ${JSON.stringify(args, null, 2)}
+extra: ${JSON.stringify(extra, null, 2)}`;
+    const command = args.command;
+    const waitForCompletion = args.waitForCompletion ?? true;
     if (!ALLOWED_COMMANDS.includes(command)) {
       const allowedList = ALLOWED_COMMANDS.map((c) => `  - ${c}`).join("\n");
       return {
         content: [{
           text: `Command not in whitelist: ${command}
 
-Received params:
+Received:
 ${debugInfo}
 
 Allowed commands:
