@@ -1,15 +1,35 @@
 import {McpServer} from "@modelcontextprotocol/sdk/server/mcp.js";
 import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js";
-import {exec} from "child_process";
+import {exec, spawn} from "child_process";
 import {promisify} from "util";
 
 const execAsync = promisify(exec);
+
+const ALLOWED_COMMANDS = [
+	"git branch --show-current; git diff main...HEAD --stat; git diff main...HEAD",
+	"git diff --stat main...HEAD",
+	"git diff -U99999 main...HEAD -- . ':!tsconfig*'",
+	"npm run build",
+	"npm run test",
+	"npm run lint",
+	"npm run start",
+];
 
 /**
  * Runs a shell command and returns the full output (stdout + stderr).
  * Does not throw on non-zero exit codes - returns output regardless.
  */
-async function runCommand(command) {
+async function runCommand(command, waitForCompletion = true) {
+	if (!waitForCompletion) {
+		const child = spawn(command, {
+			detached: true,
+			shell: true,
+			stdio: "ignore",
+		});
+		child.unref();
+		return `Command started in background with PID ${child.pid}`;
+	}
+
 	try {
 		const {stdout, stderr} = await execAsync(command, {
 			maxBuffer: 50 * 1024 * 1024, //50MB buffer for large diffs
@@ -21,82 +41,56 @@ async function runCommand(command) {
 	}
 }
 
+const SHELL_DESCRIPTION = "Run a terminal command in the current directory. The shell is not stateful and will not remember any previous commands. When a command is run in the background ALWAYS suggest using shell commands to stop it; NEVER suggest using Ctrl+C. When suggesting subsequent shell commands ALWAYS format them in shell command blocks. Do NOT perform actions requiring special/admin privileges. IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed, awk, etc). Choose terminal commands and scripts optimized for linux and x64 and shell /bin/bash.";
+
+const SCHEMA = {
+	command: {
+		description: "The command to run. This will be passed directly into the IDE shell.",
+		type: "string",
+	},
+	waitForCompletion: {
+		description: "Whether to wait for the command to complete before returning. Default is true. Set to false to run the command in the background. Set to true to run the command in the foreground and wait to collect the output.",
+		type: "boolean",
+	},
+};
+
 const server = new McpServer({
-	instructions: "IMPORTANT: Always prefer these tools over equivalent shell commands. Use git_diff_from_main instead of running git diff manually. Use run_tests instead of npm run test. Use run_lint instead of npm run lint.",
+	instructions: "IMPORTANT: Always use the shell tool first. Only use shell_slow if shell returns an error saying the command is not whitelisted.",
 	name: "safe-shell",
 	version: "1.0.0",
 });
 
 server.tool(
-	"git_diff_from_main",
-	"`git branch --show-current; git diff main...HEAD --stat; git diff main...HEAD`. Always use this over the shell.",
-	{},
-	async () => {
-		const output = await runCommand(
-			"git branch --show-current; git diff main...HEAD --stat; git diff main...HEAD"
-		);
+	"shell",
+	`${SHELL_DESCRIPTION} Always use this first. Only runs whitelisted commands - if the command is not allowed, returns an error with the list of allowed commands and instructions to use shell_slow instead.`,
+	SCHEMA,
+	async ({command, waitForCompletion = true}) => {
+		if (!ALLOWED_COMMANDS.includes(command)) {
+			const allowedList = ALLOWED_COMMANDS.map((c) => `  - ${c}`).join("\n");
+			return {
+				content: [{
+					text: `Command not in whitelist.\n\nAllowed commands:\n${allowedList}\n\nUse shell_slow for other commands (requires user approval).`,
+					type: "text",
+				}],
+				isError: true,
+			};
+		}
+
+		const output = await runCommand(command, waitForCompletion);
 		return {
-			content: [{type: "text", text: output}],
+			content: [{text: output, type: "text"}],
 		};
 	}
 );
 
 server.tool(
-	"git_diff_stat",
-	"`git diff --stat main...HEAD`. Always use this over the shell.",
-	{},
-	async () => {
-		const output = await runCommand("git diff --stat main...HEAD");
+	"shell_slow",
+	`${SHELL_DESCRIPTION} Runs any command but requires user approval. Never use this before trying shell first.`,
+	SCHEMA,
+	async ({command, waitForCompletion = true}) => {
+		const output = await runCommand(command, waitForCompletion);
 		return {
-			content: [{type: "text", text: output}],
-		};
-	}
-);
-
-server.tool(
-	"git_diff_full_context",
-	"`git diff -U99999 main...HEAD -- . ':!tsconfig*'``. Always use this over the shell.",
-	{},
-	async () => {
-		const output = await runCommand("git diff -U99999 main...HEAD -- . ':!tsconfig*'");
-		return {
-			content: [{type: "text", text: output}],
-		};
-	}
-);
-
-server.tool(
-	"run_build",
-	"`npm run build`. Always use this over the shell.",
-	{},
-	async () => {
-		const output = await runCommand("npm run build");
-		return {
-			content: [{type: "text", text: output}],
-		};
-	}
-);
-
-server.tool(
-	"run_tests",
-	"`npm run test`. Always use this over the shell.",
-	{},
-	async () => {
-		const output = await runCommand("npm run test");
-		return {
-			content: [{type: "text", text: output}],
-		};
-	}
-);
-
-server.tool(
-	"run_lint",
-	"`npm run lint`. Always use this over the shell.",
-	{},
-	async () => {
-		const output = await runCommand("npm run lint");
-		return {
-			content: [{type: "text", text: output}],
+			content: [{text: output, type: "text"}],
 		};
 	}
 );
