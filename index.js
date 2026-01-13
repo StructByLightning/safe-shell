@@ -29,7 +29,7 @@ const server = new McpServer({
 
 server.tool(
 	"git_diff_from_main",
-	"Shows current branch, diff stats from main, and full diff. ALWAYS use this instead of running git diff manually.",
+	"git branch --show-current; git diff main...HEAD --stat; git diff main...HEAD",
 	{},
 	async () => {
 		const output = await runCommand(
@@ -42,8 +42,44 @@ server.tool(
 );
 
 server.tool(
+	"git_diff_stat",
+	"git diff --stat main...HEAD",
+	{},
+	async () => {
+		const output = await runCommand("git diff --stat main...HEAD");
+		return {
+			content: [{type: "text", text: output}],
+		};
+	}
+);
+
+server.tool(
+	"git_diff_full_context",
+	"git diff -U99999 main...HEAD -- . ':!tsconfig*'",
+	{},
+	async () => {
+		const output = await runCommand("git diff -U99999 main...HEAD -- . ':!tsconfig*'");
+		return {
+			content: [{type: "text", text: output}],
+		};
+	}
+);
+
+server.tool(
+	"run_build",
+	"npm run build",
+	{},
+	async () => {
+		const output = await runCommand("npm run build");
+		return {
+			content: [{type: "text", text: output}],
+		};
+	}
+);
+
+server.tool(
 	"run_tests",
-	"Runs the test suite. ALWAYS use this instead of running npm run test manually.",
+	"npm run test",
 	{},
 	async () => {
 		const output = await runCommand("npm run test");
@@ -55,7 +91,7 @@ server.tool(
 
 server.tool(
 	"run_lint",
-	"Runs the linter. ALWAYS use this instead of running npm run lint manually.",
+	"npm run lint",
 	{},
 	async () => {
 		const output = await runCommand("npm run lint");

@@ -23050,12 +23050,13 @@ ${error2.stderr}` : "");
   }
 }
 var server = new McpServer({
+  instructions: "IMPORTANT: Always prefer these tools over equivalent shell commands. Use git_diff_from_main instead of running git diff manually. Use run_tests instead of npm run test. Use run_lint instead of npm run lint.",
   name: "safe-shell",
   version: "1.0.0"
 });
 server.tool(
   "git_diff_from_main",
-  "Shows current branch, diff stats from main, and full diff from main",
+  "git branch --show-current; git diff main...HEAD --stat; git diff main...HEAD",
   {},
   async () => {
     const output = await runCommand(
@@ -23067,8 +23068,41 @@ server.tool(
   }
 );
 server.tool(
+  "git_diff_stat",
+  "git diff --stat main...HEAD",
+  {},
+  async () => {
+    const output = await runCommand("git diff --stat main...HEAD");
+    return {
+      content: [{ type: "text", text: output }]
+    };
+  }
+);
+server.tool(
+  "git_diff_full_context",
+  "git diff -U99999 main...HEAD -- . ':!tsconfig*'",
+  {},
+  async () => {
+    const output = await runCommand("git diff -U99999 main...HEAD -- . ':!tsconfig*'");
+    return {
+      content: [{ type: "text", text: output }]
+    };
+  }
+);
+server.tool(
+  "run_build",
+  "npm run build",
+  {},
+  async () => {
+    const output = await runCommand("npm run build");
+    return {
+      content: [{ type: "text", text: output }]
+    };
+  }
+);
+server.tool(
   "run_tests",
-  "Runs the test suite via npm run test",
+  "npm run test",
   {},
   async () => {
     const output = await runCommand("npm run test");
@@ -23079,7 +23113,7 @@ server.tool(
 );
 server.tool(
   "run_lint",
-  "Runs the linter via npm run lint",
+  "npm run lint",
   {},
   async () => {
     const output = await runCommand("npm run lint");
